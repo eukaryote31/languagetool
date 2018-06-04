@@ -27,3 +27,5 @@ $COMMAND
 rm languagetool-standalone/target/languagetool-standalone-*.jar 2> /dev/null
 rm languagetool-wikipedia/target/languagetool-wikipedia-*.jar 2> /dev/null
 rm languagetool-commandline/target/languagetool-commandline-*.jar 2> /dev/null
+
+true
