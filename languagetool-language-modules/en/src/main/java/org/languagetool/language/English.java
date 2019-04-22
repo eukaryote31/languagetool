@@ -18,6 +18,11 @@
  */
 package org.languagetool.language;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.languagetool.Language;
 import org.languagetool.LanguageMaintainedState;
 import org.languagetool.UserConfig;
@@ -29,6 +34,7 @@ import org.languagetool.rules.*;
 import org.languagetool.rules.en.*;
 import org.languagetool.rules.neuralnetwork.NeuralNetworkRuleCreator;
 import org.languagetool.rules.neuralnetwork.Word2VecModel;
+import org.languagetool.rules.patterns.PatternRuleLoader;
 import org.languagetool.synthesis.Synthesizer;
 import org.languagetool.synthesis.en.EnglishSynthesizer;
 import org.languagetool.tagging.Tagger;
@@ -42,9 +48,9 @@ import org.languagetool.tokenizers.en.EnglishWordTokenizer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.io.InputStream;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Support for English - use the sub classes {@link BritishEnglish}, {@link AmericanEnglish},
@@ -54,6 +60,19 @@ import java.util.ResourceBundle;
  */
 public class English extends Language implements AutoCloseable {
 
+  private static final LoadingCache<String, List<Rule>> cache = CacheBuilder.newBuilder()
+      .expireAfterWrite(30, TimeUnit.MINUTES)
+      .build(new CacheLoader<String, List<Rule>>() {
+        @Override
+        public List<Rule> load(@NotNull String path) throws IOException {
+          List<Rule> rules = new ArrayList<>();
+          PatternRuleLoader loader = new PatternRuleLoader();
+          try (InputStream is = this.getClass().getResourceAsStream(path)) {
+            rules.addAll(loader.getRules(is, path));
+          }
+          return rules;
+        }
+      });
   private static final Language AMERICAN_ENGLISH = new AmericanEnglish();
 
   private Tagger tagger;
@@ -167,8 +186,12 @@ public class English extends Language implements AutoCloseable {
   }
 
   @Override
-  public List<Rule> getRelevantRules(ResourceBundle messages, UserConfig userConfig) throws IOException {
-    return Arrays.asList(
+  public List<Rule> getRelevantRules(ResourceBundle messages, UserConfig userConfig, Language motherTongue, List<Language> altLanguages) throws IOException {
+    List<Rule> allRules = new ArrayList<>();
+    if (motherTongue != null && "de".equals(motherTongue.getShortCode())) {
+      allRules.addAll(cache.getUnchecked("/org/languagetool/rules/en/grammar-l2-de.xml"));
+    }
+    allRules.addAll(Arrays.asList(
         new CommaWhitespaceRule(messages,
                 Example.wrong("We had coffee<marker> ,</marker> cheese and crackers and grapes."),
                 Example.fixed("We had coffee<marker>,</marker> cheese and crackers and grapes.")),
@@ -177,13 +200,15 @@ public class English extends Language implements AutoCloseable {
                 Example.wrong("This house is old. <marker>it</marker> was built in 1950."),
                 Example.fixed("This house is old. <marker>It</marker> was built in 1950.")),
         new MultipleWhitespaceRule(messages, this),
-        new LongSentenceRule(messages, userConfig),
         new SentenceWhitespaceRule(messages),
-        //new OpenNMTRule(),     // commented out because of #903
-        new WhiteSpaceBeforeParagraphEnd(messages),
+        new WhiteSpaceBeforeParagraphEnd(messages, this),
         new WhiteSpaceAtBeginOfParagraph(messages),
-        new EmptyLineRule(messages),
-        new ParagraphRepeatBeginningRule(messages),
+        new EmptyLineRule(messages, this),
+        new LongSentenceRule(messages, userConfig),
+        new LongParagraphRule(messages, this, userConfig),
+        //new OpenNMTRule(),     // commented out because of #903
+        new ParagraphRepeatBeginningRule(messages, this),
+        new PunctuationMarkAtParagraphEnd(messages, this),
         // specific to English:
         new EnglishUnpairedBracketsRule(messages, this),
         new EnglishWordRepeatRule(messages, this),
@@ -193,21 +218,39 @@ public class English extends Language implements AutoCloseable {
         new ContractionSpellingRule(messages),
         new EnglishWrongWordInContextRule(messages),
         new EnglishDashRule(),
-        new WordCoherencyRule(messages)
-    );
+        new WordCoherencyRule(messages),
+        new ReadabilityRule(messages, this, userConfig, false),
+        new ReadabilityRule(messages, this, userConfig, true)
+    ));
+    return allRules;
   }
 
   @Override
   public List<Rule> getRelevantLanguageModelRules(ResourceBundle messages, LanguageModel languageModel) throws IOException {
-    return Arrays.<Rule>asList(
+    return Arrays.asList(
         new EnglishConfusionProbabilityRule(messages, languageModel, this),
         new EnglishNgramProbabilityRule(messages, languageModel, this)
     );
   }
 
   @Override
+  public List<Rule> getRelevantLanguageModelCapableRules(ResourceBundle messages, @Nullable LanguageModel languageModel, UserConfig userConfig, Language motherTongue, List<Language> altLanguages) throws IOException {
+    if (languageModel != null && motherTongue != null && "de".equals(motherTongue.getShortCode())) {
+      return Arrays.asList(
+          new EnglishForGermansFalseFriendRule(messages, languageModel, motherTongue, this)
+      );
+    }
+    return Arrays.asList();
+  }
+
+  @Override
   public List<Rule> getRelevantWord2VecModelRules(ResourceBundle messages, Word2VecModel word2vecModel) throws IOException {
     return NeuralNetworkRuleCreator.createRules(messages, this, word2vecModel);
+  }
+
+  @Override
+  public boolean hasNGramFalseFriendRule(Language motherTongue) {
+    return motherTongue != null && "de".equals(motherTongue.getShortCode());
   }
 
   /**
@@ -224,8 +267,12 @@ public class English extends Language implements AutoCloseable {
   @Override
   public int getPriorityForId(String id) {
     switch (id) {
-      case "CONFUSION_RULE": return -10;
+      case "MISSING_HYPHEN":            return 5;
+      case "TWO_CONNECTED_MODAL_VERBS": return -5;
+      case "CONFUSION_RULE":            return -10;
+      case LongSentenceRule.RULE_ID:    return -997;
+      case LongParagraphRule.RULE_ID:   return -998;
     }
-    return 0;
+    return super.getPriorityForId(id);
   }
 }

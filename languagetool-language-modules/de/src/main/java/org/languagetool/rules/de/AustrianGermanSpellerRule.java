@@ -20,9 +20,11 @@ package org.languagetool.rules.de;
 
 import org.languagetool.UserConfig;
 import org.languagetool.language.German;
+import org.languagetool.languagemodel.LanguageModel;
 import org.languagetool.rules.spelling.CachingWordListLoader;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.ResourceBundle;
 
 /**
@@ -31,16 +33,17 @@ import java.util.ResourceBundle;
 public class AustrianGermanSpellerRule extends GermanSpellerRule {
 
   private final CachingWordListLoader wordListLoader = new CachingWordListLoader();
+  private static final String LANGUAGE_SPECIFIC_PLAIN_TEXT_DICT = "de/hunspell/spelling-de-AT.txt";
   
   public AustrianGermanSpellerRule(ResourceBundle messages, German language) {
-    this(messages, language, null);
+    this(messages, language, null, null);
   }
 
   /**
    * @since 4.2
    */
-  public AustrianGermanSpellerRule(ResourceBundle messages, German language, UserConfig userConfig) {
-    super(messages, language, userConfig);
+  public AustrianGermanSpellerRule(ResourceBundle messages, German language, UserConfig userConfig, LanguageModel lm) {
+    super(messages, language, userConfig, LANGUAGE_SPECIFIC_PLAIN_TEXT_DICT, Collections.emptyList(), lm);
   }
 
   @Override
@@ -55,5 +58,9 @@ public class AustrianGermanSpellerRule extends GermanSpellerRule {
       addIgnoreWords(ignoreWord);
     }
   }
-  
+
+  @Override
+  public String getLanguageVariantSpellingFileName() {
+    return LANGUAGE_SPECIFIC_PLAIN_TEXT_DICT;
+  }
 }

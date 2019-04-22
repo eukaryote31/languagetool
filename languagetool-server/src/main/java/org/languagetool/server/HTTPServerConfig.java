@@ -19,17 +19,18 @@
 package org.languagetool.server;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.languagetool.Experimental;
+import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
+import org.languagetool.rules.spelling.morfologik.suggestions_ordering.SuggestionsOrdererConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @since 2.0
@@ -45,6 +46,7 @@ public class HTTPServerConfig {
   
   static final String LANGUAGE_MODEL_OPTION = "--languageModel";
   static final String WORD2VEC_MODEL_OPTION = "--word2vecModel";
+  static final String NN_MODEL_OPTION = "--neuralNetworkModel";
 
   protected boolean verbose = false;
   protected boolean publicAccess = false;
@@ -60,24 +62,43 @@ public class HTTPServerConfig {
   protected Mode mode;
   protected File languageModelDir = null;
   protected File word2vecModelDir = null;
+  protected boolean pipelineCaching = false;
+  protected boolean pipelinePrewarming = false;
+
+  protected int maxPipelinePoolSize;
+  protected int pipelineExpireTime;
+  protected File fasttextModel = null;
+  protected File fasttextBinary = null;
+  protected File neuralNetworkModelDir = null;
   protected int requestLimit;
   protected int requestLimitInBytes;
   protected int timeoutRequestLimit;
   protected int requestLimitPeriodInSeconds;
+  protected int ipFingerprintFactor = 1;
   protected boolean trustXForwardForHeader;
   protected int maxWorkQueueSize;
   protected File rulesConfigFile = null;
   protected int cacheSize = 0;
-  protected boolean warmUp = false;
   protected float maxErrorsPerWordRate = 0;
+  protected int maxSpellingSuggestions = 0;
+  protected List<String> blockedReferrers = new ArrayList<>();
   protected String hiddenMatchesServer;
   protected int hiddenMatchesServerTimeout;
+  protected int hiddenMatchesServerFailTimeout;
   protected List<Language> hiddenMatchesLanguages = new ArrayList<>();
   protected String dbDriver = null;
   protected String dbUrl = null;
   protected String dbUsername = null;
   protected String dbPassword = null;
+  protected boolean dbLogging;
+  protected boolean prometheusMonitoring = false;
+  protected int prometheusPort = 9301;
 
+  protected boolean skipLoggingRuleMatches = false;
+
+  protected int slowRuleLoggingThreshold = -1; // threshold in milliseconds, used by SlowRuleLogger; < 0 - disabled
+
+  protected String abTest = null;
   /**
    * Create a server configuration for the default port ({@link #DEFAULT_PORT}).
    */
@@ -112,7 +133,8 @@ public class HTTPServerConfig {
       }
       switch (args[i]) {
         case "--config":
-          parseConfigFile(new File(args[++i]), !ArrayUtils.contains(args, LANGUAGE_MODEL_OPTION), !ArrayUtils.contains(args, WORD2VEC_MODEL_OPTION));
+          parseConfigFile(new File(args[++i]), !ArrayUtils.contains(args, LANGUAGE_MODEL_OPTION),
+            !ArrayUtils.contains(args, WORD2VEC_MODEL_OPTION), !ArrayUtils.contains(args, NN_MODEL_OPTION));
           break;
         case "-p":
         case "--port":
@@ -141,6 +163,9 @@ public class HTTPServerConfig {
         case WORD2VEC_MODEL_OPTION:
           setWord2VecModelDirectory(args[++i]);
           break;
+        case NN_MODEL_OPTION:
+          setNeuralNetworkModelDir(args[++i]);
+          break;
         default:
           if (args[i].contains("=")) {
             System.out.println("WARNING: unknown option: " + args[i] +
@@ -152,7 +177,7 @@ public class HTTPServerConfig {
     }
   }
 
-  private void parseConfigFile(File file, boolean loadLangModel, boolean loadWord2VecModel) {
+  private void parseConfigFile(File file, boolean loadLangModel, boolean loadWord2VecModel, boolean loadNeuralNetworkModel) {
     try {
       Properties props = new Properties();
       try (FileInputStream fis = new FileInputStream(file)) {
@@ -166,7 +191,12 @@ public class HTTPServerConfig {
         requestLimit = Integer.parseInt(getOptionalProperty(props, "requestLimit", "0"));
         requestLimitInBytes = Integer.parseInt(getOptionalProperty(props, "requestLimitInBytes", "0"));
         timeoutRequestLimit = Integer.parseInt(getOptionalProperty(props, "timeoutRequestLimit", "0"));
+        pipelineCaching = Boolean.parseBoolean(getOptionalProperty(props, "pipelineCaching", "false"));
+        pipelinePrewarming = Boolean.parseBoolean(getOptionalProperty(props, "pipelinePrewarming", "false"));
+        maxPipelinePoolSize = Integer.parseInt(getOptionalProperty(props, "maxPipelinePoolSize", "5"));
+        pipelineExpireTime = Integer.parseInt(getOptionalProperty(props, "pipelineExpireTimeInSeconds", "10"));
         requestLimitPeriodInSeconds = Integer.parseInt(getOptionalProperty(props, "requestLimitPeriodInSeconds", "0"));
+        ipFingerprintFactor = Integer.parseInt(getOptionalProperty(props, "ipFingerprintFactor", "1"));
         trustXForwardForHeader = Boolean.valueOf(getOptionalProperty(props, "trustXForwardForHeader", "false"));
         maxWorkQueueSize = Integer.parseInt(getOptionalProperty(props, "maxWorkQueueSize", "0"));
         if (maxWorkQueueSize < 0) {
@@ -179,6 +209,15 @@ public class HTTPServerConfig {
         String word2vecModel = getOptionalProperty(props, "word2vecModel", null);
         if (word2vecModel != null && loadWord2VecModel) {
           setWord2VecModelDirectory(word2vecModel);
+        }
+        String neuralNetworkModel = getOptionalProperty(props, "neuralNetworkModel", null);
+        if (neuralNetworkModel != null && loadNeuralNetworkModel) {
+          setNeuralNetworkModelDir(neuralNetworkModel);
+        }
+        String fasttextModel = getOptionalProperty(props, "fasttextModel", null);
+        String fasttextBinary = getOptionalProperty(props, "fasttextBinary", null);
+        if (fasttextBinary != null && fasttextModel != null) {
+          setFasttextPaths(fasttextModel, fasttextBinary);
         }
         maxCheckThreads = Integer.parseInt(getOptionalProperty(props, "maxCheckThreads", "10"));
         if (maxCheckThreads < 1) {
@@ -199,17 +238,15 @@ public class HTTPServerConfig {
         if (cacheSize < 0) {
           throw new IllegalArgumentException("Invalid value for cacheSize: " + cacheSize + ", use 0 to deactivate cache");
         }
-        String warmUpStr = getOptionalProperty(props, "warmUp", "false");
-        if (warmUpStr.equals("true")) {
-          warmUp = true;
-        } else if (warmUpStr.equals("false")) {
-          warmUp = false;
-        } else {
-          throw new IllegalArgumentException("Invalid value for warmUp: '" + warmUpStr + "', use 'true' or 'false'");
+        if (props.containsKey("warmUp")) {
+          System.err.println("Setting ignored: 'warmUp'. Look into using pipelineCaching and pipelinePrewarming instead.");
         }
         maxErrorsPerWordRate = Float.parseFloat(getOptionalProperty(props, "maxErrorsPerWordRate", "0"));
+        maxSpellingSuggestions = Integer.parseInt(getOptionalProperty(props, "maxSpellingSuggestions", "0"));
+        blockedReferrers = Arrays.asList(getOptionalProperty(props, "blockedReferrers", "").split(",\\s*"));
         hiddenMatchesServer = getOptionalProperty(props, "hiddenMatchesServer", null);
         hiddenMatchesServerTimeout = Integer.parseInt(getOptionalProperty(props, "hiddenMatchesServerTimeout", "1000"));
+        hiddenMatchesServerFailTimeout = Integer.parseInt(getOptionalProperty(props, "hiddenMatchesServerFailTimeout", "10000"));
         String langCodes = getOptionalProperty(props, "hiddenMatchesLanguages", "");
         for (String code : langCodes.split(",\\s*")) {
           if (!code.isEmpty()) {
@@ -220,13 +257,60 @@ public class HTTPServerConfig {
         dbUrl = getOptionalProperty(props, "dbUrl", null);
         dbUsername = getOptionalProperty(props, "dbUsername", null);
         dbPassword = getOptionalProperty(props, "dbPassword", null);
+        dbLogging = Boolean.valueOf(getOptionalProperty(props, "dbLogging", "false"));
+        prometheusMonitoring = Boolean.valueOf(getOptionalProperty(props, "prometheusMonitoring", "false"));
+        prometheusPort = Integer.parseInt(getOptionalProperty(props, "prometheusPort", "9301"));
+        skipLoggingRuleMatches = Boolean.valueOf(getOptionalProperty(props, "skipLoggingRuleMatches", "false"));
+        if (dbLogging && (dbDriver == null || dbUrl == null || dbUsername == null || dbPassword == null)) {
+          throw new IllegalArgumentException("dbLogging can only be true if dbDriver, dbUrl, dbUsername, and dbPassword are all set");
+        }
+        slowRuleLoggingThreshold = Integer.valueOf(getOptionalProperty(props,
+          "slowRuleLoggingThreshold", "-1"));
+
+        addDynamicLanguages(props);
+        setAbTest(getOptionalProperty(props, "abTest", null));
       }
     } catch (IOException e) {
       throw new RuntimeException("Could not load properties from '" + file + "'", e);
     }
   }
 
-  private void setLanguageModelDirectory(String langModelDir) {
+  private void addDynamicLanguages(Properties props) throws IOException {
+    for (Object keyObj : props.keySet()) {
+      String key = (String)keyObj;
+      if (key.startsWith("lang-") && !key.contains("-dictPath")) {
+        String code = key.substring("lang-".length());
+        if (!code.contains("-") && code.length() != 2 && code.length() != 3) {
+          throw new IllegalArgumentException("code is supposed to be a 2 (or rarely 3) character code (unless it uses a format with variant, like xx-YY): '" + code + "'");
+        }
+        String nameKey = "lang-" + code;
+        String name = props.getProperty(nameKey);
+        String dictPathKey = "lang-" + code + "-dictPath";
+        String dictPath = props.getProperty(dictPathKey);
+        if (dictPath == null) {
+          throw new IllegalArgumentException(dictPathKey + " must be set");
+        }
+        File dictPathFile = new File(dictPath);
+        if (!dictPathFile.exists() || !dictPathFile.isFile()) {
+          throw new IllegalArgumentException("dictionary file does not exist or is not a file: '" + dictPath + "'");
+        }
+        if (!dictPathFile.getName().endsWith(".dict")) {
+          throw new IllegalArgumentException("dictionary file is supposed to be named *.dict: '" + dictPath + "'");
+        }
+        ServerTools.print("Adding dynamic spell checker language " + name + ", code: " + code + ", dictionary: " + dictPath);
+        Language lang = Languages.addLanguage(name, code, new File(dictPath));
+        // better fail early in case of misconfiguration, so use the language now:
+        if (!new File(lang.getCommonWordsPath()).exists()) {
+          throw new IllegalArgumentException("Common words path not found: '" + lang.getCommonWordsPath() + "'");
+        }
+        JLanguageTool lt = new JLanguageTool(lang);
+        lt.check("test");
+      }
+    }
+  }
+
+  void setLanguageModelDirectory(String langModelDir) {
+    SuggestionsOrdererConfig.setNgramsPath(langModelDir);
     languageModelDir = new File(langModelDir);
     if (!languageModelDir.exists() || !languageModelDir.isDirectory()) {
       throw new RuntimeException("LanguageModel directory not found or is not a directory: " + languageModelDir);
@@ -237,6 +321,24 @@ public class HTTPServerConfig {
     word2vecModelDir = new File(w2vModelDir);
     if (!word2vecModelDir.exists() || !word2vecModelDir.isDirectory()) {
       throw new RuntimeException("Word2Vec directory not found or is not a directory: " + word2vecModelDir);
+    }
+  }
+
+  private void setNeuralNetworkModelDir(String nnModelDir) {
+    neuralNetworkModelDir = new File(nnModelDir);
+    if (!neuralNetworkModelDir.exists() || !neuralNetworkModelDir.isDirectory()) {
+      throw new RuntimeException("Neural network model directory not found or is not a directory: " + neuralNetworkModelDir);
+    }
+  }
+
+  private void setFasttextPaths(String fasttextModelPath, String fasttextBinaryPath) {
+    fasttextModel = new File(fasttextModelPath);
+    fasttextBinary = new File(fasttextBinaryPath);
+    if (!fasttextModel.exists() || fasttextModel.isDirectory()) {
+      throw new RuntimeException("Fasttext model path not valid (file doesn't exist or is a directory): " + fasttextModelPath);
+    }
+    if (!fasttextBinary.exists() || fasttextBinary.isDirectory() || !fasttextBinary.canExecute()) {
+      throw new RuntimeException("Fasttext binary path not valid (file doesn't exist, is a directory or not executable): " + fasttextBinaryPath);
     }
   }
 
@@ -345,6 +447,11 @@ public class HTTPServerConfig {
     return requestLimitPeriodInSeconds;
   }
 
+  /** since 4.4 */
+  int getIpFingerprintFactor() {
+    return ipFingerprintFactor;
+  }
+
   /**
    * @param maxCheckTimeMillis The maximum duration allowed for a single check in milliseconds, checks that take longer
    *                      will stop with an exception. Use {@code -1} for no limit.
@@ -381,6 +488,50 @@ public class HTTPServerConfig {
   @Nullable
   File getWord2VecModelDir() {
     return word2vecModelDir;
+  }
+
+
+  /**
+   * Get base directory for neural network models or {@code null}
+   * @since 4.4
+   */
+  public File getNeuralNetworkModelDir() {
+    return neuralNetworkModelDir;
+  }
+
+
+  /**
+   * Get model path for fasttext language detection
+   * @since 4.3
+   */
+  @Nullable
+  public File getFasttextModel() {
+    return fasttextModel;
+  }
+
+  /**
+   * Set model path for fasttext language detection
+   * @since 4.4
+   */
+  public void setFasttextModel(File model) {
+    fasttextModel = Objects.requireNonNull(model);
+  }
+
+  /**
+   * Get binary path for fasttext language detection
+   * @since 4.3
+   */
+  @Nullable
+  public File getFasttextBinary() {
+    return fasttextBinary;
+  }
+
+  /**
+   * Set binary path for fasttext language detection
+   * @since 4.4
+   */
+  public void setFasttextBinary(File binary) {
+    fasttextBinary = Objects.requireNonNull(binary);
   }
 
   /** @since 2.7 */
@@ -422,6 +573,64 @@ public class HTTPServerConfig {
     return maxWorkQueueSize;
   }
 
+
+  /**
+   * @since 4.4
+   * Cache initalized JLanguageTool instances and share between non-parallel requests with identical paramenters
+   * Improves response time (especially when dealing with many small requests without specific settings),
+   * but increases memory usage
+   */
+  public boolean isPipelineCachingEnabled() {
+    return pipelineCaching;
+  }
+
+
+  /**
+   * @since 4.4
+   * Before starting to listen for requests, create a few pipelines for frequently used request settings
+   * and run simple checks on them; prevents long response time / request overload on the first real incoming requests
+   */
+  public boolean isPipelinePrewarmingEnabled() {
+    return pipelinePrewarming;
+  }
+
+  /**
+   * @since 4.4
+   * Keep pipelines ready for this many different request settings
+   */
+  public int getMaxPipelinePoolSize() {
+    return maxPipelinePoolSize;
+  }
+
+  /**
+   * @since 4.4
+   * Expire pipelines for a specific request setting after this many seconds without any matching request elapsed
+   */
+  public int getPipelineExpireTime() {
+    return pipelineExpireTime;
+  }
+
+
+  /** @since 4.4 */
+  public void setPipelineCaching(boolean pipelineCaching) {
+    this.pipelineCaching = pipelineCaching;
+  }
+
+  /** @since 4.4 */
+  public void setPipelinePrewarming(boolean pipelinePrewarming) {
+    this.pipelinePrewarming = pipelinePrewarming;
+  }
+
+  /** @since 4.4 */
+  public void setMaxPipelinePoolSize(int maxPipelinePoolSize) {
+    this.maxPipelinePoolSize = maxPipelinePoolSize;
+  }
+
+  /** @since 4.4 */
+  public void setPipelineExpireTime(int pipelineExpireTime) {
+    this.pipelineExpireTime = pipelineExpireTime;
+  }
+
   /**
    * Cache size (in number of sentences).
    * @since 3.7
@@ -438,11 +647,6 @@ public class HTTPServerConfig {
     this.cacheSize = sentenceCacheSize;
   }
 
-  /** @since 3.7 */
-  boolean getWarmUp() {
-    return warmUp;
-  }
-
   /**
    * Maximum errors per word rate, checking will stop if the rate is higher.
    * For example, with a rate of 0.33, the checking would stop if the user's
@@ -454,6 +658,31 @@ public class HTTPServerConfig {
     return maxErrorsPerWordRate;
   }
 
+  /**
+   * Maximum number of spelling errors for which a suggestion will be generated
+   * per check. It makes sense to limit this as generating suggestions is a CPU-heavy task.
+   * @since 4.2
+   */
+  int getMaxSpellingSuggestions() {
+    return maxSpellingSuggestions;
+  }
+
+  /**
+   * A list of HTTP referrers that are blocked and will only get an error message.
+   * @since 4.2
+   */
+  @NotNull
+  List<String> getBlockedReferrers() {
+    return blockedReferrers;
+  }
+
+  /**
+   * @since 4.2
+   */
+  void setBlockedReferrers(List<String> blockedReferrers) {
+    this.blockedReferrers = Objects.requireNonNull(blockedReferrers);
+  }
+  
   /**
    * URL of server that is queried to add additional (but hidden) matches to the result.
    * @since 4.0
@@ -471,6 +700,15 @@ public class HTTPServerConfig {
   @Experimental
   int getHiddenMatchesServerTimeout() {
     return hiddenMatchesServerTimeout;
+  }
+
+  /**
+   * Period to skip requests to hidden matches server after a timeout (in milliseconds)
+   * @since 4.5
+   */
+  @Experimental
+  int getHiddenMatchesServerFailTimeout() {
+    return hiddenMatchesServerFailTimeout;
   }
 
   /**
@@ -563,6 +801,82 @@ public class HTTPServerConfig {
     this.dbPassword = dbPassword;
   }
   
+  /**
+   * Whether meta data about each search (like in the logfile) should be logged to the database.
+   * @since 4.4
+   */
+  @Experimental
+  void setDatabaseLogging(boolean logging) {
+    this.dbLogging = logging;
+  }
+
+  /**
+   * @since 4.4
+   */
+  @Experimental
+  boolean getDatabaseLogging() {
+    return this.dbLogging;
+  }
+
+
+  /**
+   * @since 4.6
+   * @return
+   */
+  public boolean isPrometheusMonitoring() {
+    return prometheusMonitoring;
+  }
+
+  /**
+   * @since 4.6
+   * @return
+   */
+  public int getPrometheusPort() {
+    return prometheusPort;
+  }
+
+  /**
+   * @since 4.5
+   * @return threshold for rule computation time until a warning gets logged, in milliseconds
+   */
+  @Experimental
+  public int getSlowRuleLoggingThreshold() {
+    return slowRuleLoggingThreshold;
+  }
+
+  /**
+   * @since 4.5
+   */
+  @Experimental
+  boolean isSkipLoggingRuleMatches() {
+    return this.skipLoggingRuleMatches;
+  }
+
+
+  /**
+   * @since 4.4
+   * See if a specific A/B-Test is to be run
+   */
+  @Experimental
+  @Nullable
+  public String getAbTest() {
+    return abTest;
+  }
+
+  /**
+   * @since 4.4
+   * Enable a specific A/B-Test to be run (or null to disable all tests)
+   */
+  @Experimental
+  public void setAbTest(@Nullable String abTest) {
+    List<String> values = Arrays.asList("SuggestionsOrderer", "SuggestionsRanker");
+    if (abTest != null && !values.contains(abTest)) {
+        throw new IllegalConfigurationException("Unknown value for 'abTest' property: Must be one of: " + values);
+    }
+    this.abTest = abTest;
+  }
+
+
   /**
    * @throws IllegalConfigurationException if property is not set 
    */

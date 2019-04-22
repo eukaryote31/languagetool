@@ -20,6 +20,8 @@
 package org.languagetool.rules.en;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.languagetool.Language;
@@ -30,9 +32,20 @@ public final class MorfologikBritishSpellerRule extends AbstractEnglishSpellerRu
   public static final String RULE_ID = "MORFOLOGIK_RULE_EN_GB";
 
   private static final String RESOURCE_FILENAME = "/en/hunspell/en_GB.dict";
+  private static final String LANGUAGE_SPECIFIC_PLAIN_TEXT_DICT = "en/hunspell/spelling_en-GB.txt";
+  private static final Map<String,String> US_ENGLISH = loadWordlist("en/en-US-GB.txt", 0);
+  
+  public MorfologikBritishSpellerRule(ResourceBundle messages, Language language, UserConfig userConfig, List<Language> altLanguages) throws IOException {
+    super(messages, language, userConfig, altLanguages);
+  }
 
-  public MorfologikBritishSpellerRule(ResourceBundle messages, Language language, UserConfig userConfig) throws IOException {
-    super(messages, language, userConfig);
+  @Override
+  protected VariantInfo isValidInOtherVariant(String word) {
+    String otherVariant = US_ENGLISH.get(word);
+    if (otherVariant != null) {
+      return new VariantInfo("American English", otherVariant);
+    }
+    return null;
   }
 
   @Override
@@ -45,4 +58,8 @@ public final class MorfologikBritishSpellerRule extends AbstractEnglishSpellerRu
     return RULE_ID;
   }
 
+  @Override
+  public String getLanguageVariantSpellingFileName() {
+    return LANGUAGE_SPECIFIC_PLAIN_TEXT_DICT;
+  }
 }

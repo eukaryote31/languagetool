@@ -33,18 +33,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
     </unification>
     <unification feature="gender">
         <equivalence type="masc">
-            <token regexp="yes">.*_masc</token>
+            <token regexp="yes">.*-masc</token>
         </equivalence>
         <equivalence type="fem">
-            <token regexp="yes">.*_fem</token>
+            <token regexp="yes">.*-fem</token>
         </equivalence>
     </unification>
     <unification feature="number">
         <equivalence type="plur">
-            <token regexp="yes">.*_plur_.*</token>
+            <token regexp="yes">.*-plur-.*</token>
         </equivalence>
         <equivalence type="sing">
-            <token regexp="yes">.*_sing_.*</token>
+            <token regexp="yes">.*-sing-.*</token>
         </equivalence>
     </unification>
 
@@ -302,7 +302,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </rule>
             <rule id="PATTERN_REGEXP_MATCH_SUGGESTIONS_INSIDE" name="znel vola -> vo nel la">
                 <pattern>
-                    <token regexp="yes">znel</token>
+                    <token>znel</token>
                     <token regexp="yes">(ri?|)vo?(la|ci|cial|chal)</token>
                 </pattern>
                 <message>Test 03: <suggestion>vo <match no="1" case_conversion="startlower"
@@ -314,7 +314,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </rule>
             <rule id="PATTERN_REGEXP_MATCH_SUGGESTIONS_OUTSIDE" name="znel vola -> vo nel la">
                 <pattern>
-                    <token regexp="yes">znel</token>
+                    <token>znel</token>
                     <token regexp="yes">(ri?|)vo?(la|ci|cial|chal)</token>
                 </pattern>
                 <message>Test 03: </message>
@@ -612,11 +612,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                     </unify>
                 </pattern>
                 <message>blabla</message>
-                <example>det_sing_masc</example>
-                <example correction=""><marker>det_sing_masc adj_sing_masc subst_plur_fem</marker></example>
-                <example correction=""><marker>det_sing_fem adj_sing_masc subst_plur_fem</marker></example>
-                <example correction=""><marker>det_sing_fem adj_sing_fem subst_plur_fem</marker></example>
-                <example correction=""><marker>det_plur_fem adj_sing_fem subst_plur_fem</marker></example>
+                <example>det-sing-masc</example>
+                <example correction=""><marker>det-sing-masc adj-sing-masc subst-plur-fem</marker></example>
+                <example correction=""><marker>det-sing-fem adj-sing-masc subst-plur-fem</marker></example>
+                <example correction=""><marker>det-sing-fem adj-sing-fem subst-plur-fem</marker></example>
+                <example correction=""><marker>det-plur-fem adj-sing-fem subst-plur-fem</marker></example>
             </rule>
         </rulegroup>
         <rulegroup id="suggestions_outside_message" name="Test suggestions written outside message">
@@ -661,7 +661,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <example>blah or blah</example>
             </rule>
         </rulegroup>
-        </category>
+    </category>
     <category id="MINMAX" name="Test tokens with min and max attributes">
         <rule id="TEST_MIN_OCCURRENCE" name="Test whether minOccurrence is handled correctly">
             <pattern>
@@ -831,6 +831,23 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         -->
     </category>
 
+    <category id="RAW_POS_CAT" name="Tests for raw_pos" default="off">
+        <rule id="RAW_POS1" name="Rule 1 - no raw_pos">
+            <pattern>
+                <token postag="CD"/>
+            </pattern>
+            <message>bla</message>
+            <example correction=""><marker>5</marker></example>
+        </rule>
+        <rule id="RAW_POS2" name="Rule 2 - raw_pos">
+            <pattern raw_pos="yes">
+                <token postag="UNKNOWN"/>
+            </pattern>
+            <message>bla</message>
+            <example correction=""><marker>5</marker></example>
+        </rule>
+    </category>
+    
     <category id="DEFAULT_OFF" name="A category that's off by default" default="off">
         <rule id="IN_OFF_CATEGORY" name="Rule 1">
             <pattern>

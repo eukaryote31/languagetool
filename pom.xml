@@ -20,11 +20,11 @@
 
   <groupId>org.languagetool</groupId>
   <artifactId>languagetool-parent</artifactId>
-  <version>4.2-SNAPSHOT</version>
+  <version>4.6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
-      <languagetool.version>4.2-SNAPSHOT</languagetool.version>
+      <languagetool.version>4.6-SNAPSHOT</languagetool.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <maven.compiler.source>1.8</maven.compiler.source>
       <maven.compiler.target>1.8</maven.compiler.target>
@@ -52,16 +52,40 @@
           <plugins>
 
               <plugin>
+                  <groupId>pl.project13.maven</groupId>
+                  <artifactId>git-commit-id-plugin</artifactId>
+                  <version>2.2.6</version>
+                  <executions>
+                      <execution>
+                          <id>get-the-git-infos</id>
+                          <goals>
+                              <goal>revision</goal>
+                          </goals>
+                          <phase>initialize</phase>
+                      </execution>
+                  </executions>
+                  <configuration>
+                      <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                      <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                  </configuration>
+              </plugin>
+              
+              <plugin>
                   <artifactId>maven-compiler-plugin</artifactId>
-                  <version>3.7.0</version>
+                  <version>3.8.0</version>
+                  <configuration>
+                      <!-- helps IntelliJ to not forget the configuration (https://stackoverflow.com/questions/29888592/): -->
+                      <source>${maven.compiler.source}</source>
+                      <target>${maven.compiler.target}</target>
+                  </configuration>
               </plugin>
 
               <plugin>
                   <artifactId>maven-surefire-plugin</artifactId>
-                  <version>2.21.0</version>
+                  <version>2.22.0</version>
                   <configuration>
                       <trimStackTrace>false</trimStackTrace>
-                      <argLine>-Xms256m -Xmx950m</argLine>
+                      <argLine>-Xms256m -Xmx1550m</argLine>
                       <runOrder>failedfirst</runOrder>
                       <excludes>
                           <exclude>**/*ConcurrencyTest.java</exclude>
@@ -73,10 +97,11 @@
               <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-javadoc-plugin</artifactId>
-                  <version>3.0.0-M1</version>
+                  <version>3.0.1</version>
                   <configuration>
                       <bottom><![CDATA[&nbsp;]]></bottom>
                       <excludePackageNames>org.languagetool.dev.conversion*</excludePackageNames>
+                      <!-- don't check javadoc <additionalJOption>-Xdoclint:none</additionalJOption> -->
                   </configuration>
               </plugin>
               
@@ -157,7 +182,7 @@
     <module>languagetool-language-modules/ro</module>
     <module>languagetool-language-modules/sk</module>
     <module>languagetool-language-modules/sl</module>
-    <module>languagetool-language-modules/sr</module>
+    <!-- re-add when a maintainer is found: <module>languagetool-language-modules/sr</module>-->
     <module>languagetool-language-modules/es</module>
     <module>languagetool-language-modules/sv</module>
     <module>languagetool-language-modules/ta</module>

@@ -100,6 +100,9 @@ public class VerbAgreementRuleTest {
     assertGood("So tes\u00ADtest Du das mit dem soft hyphen.");
     assertGood("Viele Brunnen in Italiens Hauptstadt sind bereits abgeschaltet.");
     assertGood("„Werde ich tun!“");
+    assertGood("Sie fragte: „Muss ich aussagen?“");
+    assertGood("„Können wir bitte das Thema wechseln, denn ich möchte ungern darüber reden?“");
+    assertGood("Er sagt: „Willst du behaupten, dass mein Sohn euch liebt?“");
     // incorrect sentences:
     assertBad("Als Borcarbid weißt es eine hohe Härte auf.");
     assertBad("Das greift auf Vorläuferinstitutionen bist auf die Zeit von 1234 zurück.");
@@ -112,6 +115,8 @@ public class VerbAgreementRuleTest {
     assertBad("„Du muss gehen.“");
     assertBad("Du weiß es doch.");
     assertBad("Sie sagte zu mir: „Du muss gehen.“");
+    assertBad("„Ich müsst alles machen.“");
+    assertBad("„Ich könnt mich sowieso nicht verstehen.“");
   }
 
   @Test
@@ -182,6 +187,8 @@ public class VerbAgreementRuleTest {
     assertGood("Wünschst du dir mehr Zeit?");
     assertGood("Wyrjtjbst du?"); // make sure that "UNKNOWN" is handled correctly
     assertGood("Wenn ich du wäre, würde ich das nicht machen.");
+    assertGood("Er sagte: „Darf ich bitten, mir zu folgen?“");
+    // TODO: assertBad("Er fragte irritiert: „Darf ich fragen, die an dich gerichtet werden, beantworten?“");
 //     assertGood("Angenommen, du wärst ich."); TODO
     assertGood("Ich denke, dass das Haus, in das er gehen will, heute Morgen gestrichen worden ist.");
     // incorrect sentences:

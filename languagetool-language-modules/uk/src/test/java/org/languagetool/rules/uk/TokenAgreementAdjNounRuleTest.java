@@ -78,7 +78,8 @@ public class TokenAgreementAdjNounRuleTest {
     assertEquals(1, rule.match(langTool.getAnalyzedSentence("жодного кубічного метру в Україні не буде")).length);
     assertEquals(1, rule.match(langTool.getAnalyzedSentence("складний рік на фондовим ринку")).length);
     assertEquals(1, rule.match(langTool.getAnalyzedSentence("є найкращий засобом для очистки")).length);
-    
+    assertEquals(1, rule.match(langTool.getAnalyzedSentence("має вчену ступінь з хімії")).length);
+
     // не працює через іменник "французька" (мова)
 //    assertEquals(1, rule.match(langTool.getAnalyzedSentence("французька політик")).length);
 
@@ -155,12 +156,19 @@ public class TokenAgreementAdjNounRuleTest {
 //    assertEquals(1, rule.match(langTool.getAnalyzedSentence("паралельно приймаючі пацієнтів")).length);
 
     // false v_rod with -у
-    RuleMatch[] matches = rule.match(langTool.getAnalyzedSentence("кримського епістолярію"));
+    RuleMatch[] matches = rule.match(langTool.getAnalyzedSentence("кримського безсмертнику"));
     assertEquals(1, matches.length);
     assertTrue("Missing message for v_rod/v_dav -у/ю", matches[0].getMessage().contains("Можливо"));
 
     // false v_rod with -а
     assertEquals(1, rule.match(langTool.getAnalyzedSentence("федерального округа")).length);
+
+    // ne- together
+    //TODO: fix later
+//    matches = rule.match(langTool.getAnalyzedSentence("пропонує незламані ураганами сучасності"));
+//    assertEquals(1, matches.length);
+//    assertTrue("Missing message for «не» пишеться окремо", matches[0].getMessage().contains("писати окремо"));
+     
 
     // false :nv
     assertEquals(1, rule.match(langTool.getAnalyzedSentence("затверджений народним віче")).length);
@@ -419,6 +427,10 @@ public class TokenAgreementAdjNounRuleTest {
     assertEmptyMatch("і колишня Маяковського");
     assertEmptyMatch("Львівської ім. С. Крушельницької");
     assertEmptyMatch("4-й Запорізький ім. гетьмана Б. Хмельницького");
+
+    assertEquals(1, rule.match(langTool.getAnalyzedSentence("у Великій Вітчизняній Війн")).length);
+    assertEquals(1, rule.match(langTool.getAnalyzedSentence("у Великій Вітчизняній війна")).length);
+    assertEmptyMatch("Після Великої Вітчизняної будівництво істотно розширилося");
 
     // зразка
     assertEmptyMatch("польські зразка 1620—1650 років");

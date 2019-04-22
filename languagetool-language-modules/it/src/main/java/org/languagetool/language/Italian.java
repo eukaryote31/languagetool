@@ -87,7 +87,7 @@ public class Italian extends Language implements AutoCloseable {
   }
 
   @Override
-  public List<Rule> getRelevantRules(ResourceBundle messages, UserConfig userConfig) throws IOException {
+  public List<Rule> getRelevantRules(ResourceBundle messages, UserConfig userConfig, Language motherTongue, List<Language> altLanguages) throws IOException {
     return Arrays.asList(
             new WhitespaceBeforePunctuationRule(messages),
             new CommaWhitespaceRule(messages),
@@ -95,7 +95,7 @@ public class Italian extends Language implements AutoCloseable {
             new GenericUnpairedBracketsRule(messages,
                     Arrays.asList("[", "(", "{", "»", "«" /*"‘"*/),
                     Arrays.asList("]", ")", "}", "«", "»" /*"’"*/)),
-            new MorfologikItalianSpellerRule(messages, this, userConfig),
+            new MorfologikItalianSpellerRule(messages, this, userConfig, altLanguages),
             new UppercaseSentenceStartRule(messages, this),
             new ItalianWordRepeatRule(messages, this),
             new MultipleWhitespaceRule(messages, this)
@@ -114,7 +114,7 @@ public class Italian extends Language implements AutoCloseable {
   /** @since 3.1 */
   @Override
   public List<Rule> getRelevantLanguageModelRules(ResourceBundle messages, LanguageModel languageModel) throws IOException {
-    return Arrays.<Rule>asList(
+    return Arrays.asList(
             new ItalianConfusionProbabilityRule(messages, languageModel, this)
     );
   }

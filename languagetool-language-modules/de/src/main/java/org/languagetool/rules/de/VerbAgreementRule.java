@@ -87,6 +87,14 @@ public class VerbAgreementRule extends TextLevelRule {
       new PatternTokenBuilder().token("ich").build()
     ),
     Arrays.asList(
+      new PatternTokenBuilder().csToken("Solltest").build(),
+      new PatternTokenBuilder().token("du").build()
+    ),
+    Arrays.asList(
+      new PatternTokenBuilder().csToken("Sollte").build(),
+      new PatternTokenBuilder().tokenRegex("er|sie").build()
+    ),
+    Arrays.asList(
       new PatternTokenBuilder().pos(JLanguageTool.SENTENCE_START_TAGNAME).build(),  // "Bin gleich wieder da"
       new PatternTokenBuilder().csToken("Bin").build()
     ),
@@ -129,6 +137,23 @@ public class VerbAgreementRule extends TextLevelRule {
      new PatternTokenBuilder().tokenRegex("du|e[rs]|sie|ich").build(),
      new PatternTokenBuilder().token("sein").matchInflectedForms().build(),
      new PatternTokenBuilder().tokenRegex("[\\.,]").build()
+    ),
+    Arrays.asList( // Musst du gehen?
+     new PatternTokenBuilder().tokenRegex("D[au]rf.*|Muss.*").build(),
+     new PatternTokenBuilder().posRegex("PRO:PER:NOM:.+").build(),
+     new PatternTokenBuilder().posRegex("VER:INF:.+").build(),
+     new PatternTokenBuilder().pos("PKT").build(),
+     new PatternTokenBuilder().tokenRegex("(?!die).+").build()
+    ),
+    Arrays.asList(
+     new PatternTokenBuilder().csToken("(").build(),
+     new PatternTokenBuilder().posRegex("VER:2:SIN:.+").build(),
+     new PatternTokenBuilder().csToken(")").build()
+    ),
+    Arrays.asList(
+     new PatternTokenBuilder().posRegex("VER:MOD:1:PLU:.+").build(),
+     new PatternTokenBuilder().csToken("wir").build(),
+     new PatternTokenBuilder().csToken("bitte").build()
     )
   );
 
@@ -172,7 +197,9 @@ public class VerbAgreementRule extends TextLevelRule {
   private static final Set<String> CONJUNCTIONS = new HashSet<>(Arrays.asList(
     "weil",
     "obwohl",
-    "dass"/*,
+    "dass",
+    "indem",
+    "sodass"/*,
     "damit",
     "wenn"*/
   ));
@@ -313,8 +340,8 @@ public class VerbAgreementRule extends TextLevelRule {
     if (posVer1Sin != -1 && posIch == -1 && !isQuotationMark(tokens[posVer1Sin-1])) { // 1st pers sg verb but no "ich"
       ruleMatches.add(ruleMatchWrongVerb(tokens[posVer1Sin], pos, sentence));
     } else if (posIch > 0 && !isNear(posPossibleVer1Sin, posIch) // check whether verb next to "ich" is 1st pers sg
-               && (tokens[posIch].getToken().equals("ich") || tokens[posIch].getStartPos() == 0) // ignore "lyrisches Ich" etc.
-               && !isQuotationMark(tokens[posIch-1])) {
+               && (tokens[posIch].getToken().equals("ich") || tokens[posIch].getStartPos() <= 1) // ignore "lyrisches Ich" etc.
+               && (!isQuotationMark(tokens[posIch-1])  || posIch < 3 || (posIch > 1 && tokens[posIch-2].getToken().equals(":")))) {
       int plus1 = ((posIch + 1) == tokens.length) ? 0 : +1; // prevent posIch+1 segfault
       BooleanAndFiniteVerb check = verbDoesMatchPersonAndNumber(tokens[posIch - 1], tokens[posIch + plus1], "1", "SIN", finiteVerb);
       if (!check.verbDoesMatchPersonAndNumber && !nextButOneIsModal(tokens, posIch) && !"äußerst".equals(check.finiteVerb.getToken())) {
@@ -324,7 +351,8 @@ public class VerbAgreementRule extends TextLevelRule {
     
     if (posVer2Sin != -1 && posDu == -1 && !isQuotationMark(tokens[posVer2Sin-1])) {
       ruleMatches.add(ruleMatchWrongVerb(tokens[posVer2Sin], pos, sentence));
-    } else if (posDu > 0 && !isNear(posPossibleVer2Sin, posDu) && (!isQuotationMark(tokens[posDu-1]) || posDu < 3 || (posDu > 1 && tokens[posDu-2].getToken().equals(":")))) {
+    } else if (posDu > 0 && !isNear(posPossibleVer2Sin, posDu)
+               &&(!isQuotationMark(tokens[posDu-1]) || posDu < 3 || (posDu > 1 && tokens[posDu-2].getToken().equals(":")))) {
       int plus1 = ((posDu + 1) == tokens.length) ? 0 : +1;
       BooleanAndFiniteVerb check = verbDoesMatchPersonAndNumber(tokens[posDu - 1], tokens[posDu + plus1], "2", "SIN", finiteVerb);
       if (!check.verbDoesMatchPersonAndNumber &&
@@ -336,7 +364,8 @@ public class VerbAgreementRule extends TextLevelRule {
       }
     }
     
-    if (posEr > 0 && !isNear(posPossibleVer3Sin, posEr) && !isQuotationMark(tokens[posEr-1])) {
+    if (posEr > 0 && !isNear(posPossibleVer3Sin, posEr)
+        && (!isQuotationMark(tokens[posEr-1])  || posEr < 3 || (posEr > 1 && tokens[posEr-2].getToken().equals(":")))) {
       int plus1 = ((posEr + 1) == tokens.length) ? 0 : +1;
       BooleanAndFiniteVerb check = verbDoesMatchPersonAndNumber(tokens[posEr - 1], tokens[posEr + plus1], "3", "SIN", finiteVerb);
       if (!check.verbDoesMatchPersonAndNumber 
@@ -387,7 +416,7 @@ public class VerbAgreementRule extends TextLevelRule {
   private boolean hasUnambiguouslyPersonAndNumber(AnalyzedTokenReadings tokenReadings, String person, String number) {
     if (tokenReadings.getToken().length() == 0
         || (Character.isUpperCase(tokenReadings.getToken().charAt(0)) && tokenReadings.getStartPos() != 0)
-        || !tokenReadings.hasPartialPosTag("VER")) {
+        || !tokenReadings.hasPosTagStartingWith("VER")) {
       return false;
     }
     for (AnalyzedToken analyzedToken : tokenReadings) {
@@ -408,7 +437,7 @@ public class VerbAgreementRule extends TextLevelRule {
   private boolean isFiniteVerb(AnalyzedTokenReadings token) {
     if (token.getToken().length() == 0
         || (Character.isUpperCase(token.getToken().charAt(0)) && token.getStartPos() != 0)
-        || !token.hasPartialPosTag("VER")
+        || !token.hasPosTagStartingWith("VER")
         || token.hasAnyPartialPosTag("PA2", "PRO:", "ZAL")
         || "einst".equals(token.getToken())) {
       return false;

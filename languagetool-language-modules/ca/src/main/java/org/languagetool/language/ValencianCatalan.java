@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import org.languagetool.Language;
 import org.languagetool.UserConfig;
 import org.languagetool.rules.CommaWhitespaceRule;
 import org.languagetool.rules.DoublePunctuationRule;
@@ -37,6 +38,7 @@ import org.languagetool.rules.ca.CatalanUnpairedBracketsRule;
 import org.languagetool.rules.ca.CatalanUnpairedExclamationMarksRule;
 import org.languagetool.rules.ca.CatalanUnpairedQuestionMarksRule;
 import org.languagetool.rules.ca.CatalanWordRepeatRule;
+import org.languagetool.rules.ca.CatalanWrongWordInContextDiacriticsRule;
 import org.languagetool.rules.ca.CatalanWrongWordInContextRule;
 import org.languagetool.rules.ca.ComplexAdjectiveConcordanceRule;
 import org.languagetool.rules.ca.MorfologikCatalanSpellerRule;
@@ -46,6 +48,8 @@ import org.languagetool.rules.ca.SimpleReplaceBalearicRule;
 import org.languagetool.rules.ca.SimpleReplaceDNVColloquialRule;
 import org.languagetool.rules.ca.SimpleReplaceDNVRule;
 import org.languagetool.rules.ca.SimpleReplaceDNVSecondaryRule;
+import org.languagetool.rules.ca.SimpleReplaceDiacriticsIEC;
+import org.languagetool.rules.ca.SimpleReplaceDiacriticsTraditional;
 import org.languagetool.rules.ca.SimpleReplaceRule;
 import org.languagetool.rules.ca.SimpleReplaceVerbsRule;
 
@@ -67,7 +71,7 @@ public class ValencianCatalan extends Catalan {
   }
   
   @Override
-  public List<Rule> getRelevantRules(ResourceBundle messages, UserConfig userConfig) throws IOException {
+  public List<Rule> getRelevantRules(ResourceBundle messages, UserConfig userConfig, Language motherTongue, List<Language> altLanguages) throws IOException {
     return Arrays.asList(
             new CommaWhitespaceRule(messages, 
                 Example.wrong("A parer seu<marker> ,</marker> no era veritat."),
@@ -81,12 +85,13 @@ public class ValencianCatalan extends Catalan {
             new LongSentenceRule(messages, userConfig),
             // specific to Catalan:
             new CatalanWordRepeatRule(messages, this),
-            new MorfologikCatalanSpellerRule(messages, this, userConfig),
+            new MorfologikCatalanSpellerRule(messages, this, userConfig, altLanguages),
             new CatalanUnpairedQuestionMarksRule(messages, this),
             new CatalanUnpairedExclamationMarksRule(messages, this),
             new AccentuationCheckRule(messages),
             new ComplexAdjectiveConcordanceRule(messages),
             new CatalanWrongWordInContextRule(messages),
+            new CatalanWrongWordInContextDiacriticsRule(messages),
             new ReflexiveVerbsRule(messages),
             new SimpleReplaceVerbsRule(messages, this),
             new SimpleReplaceBalearicRule(messages),
@@ -95,7 +100,9 @@ public class ValencianCatalan extends Catalan {
             // Valencian DNV
             new SimpleReplaceDNVRule(messages, this),
             new SimpleReplaceDNVColloquialRule(messages, this),
-            new SimpleReplaceDNVSecondaryRule(messages, this)
+            new SimpleReplaceDNVSecondaryRule(messages, this),
+            new SimpleReplaceDiacriticsIEC(messages),
+            new SimpleReplaceDiacriticsTraditional(messages)
     );
   }
 

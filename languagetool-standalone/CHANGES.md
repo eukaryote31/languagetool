@@ -1,13 +1,279 @@
 # LanguageTool Change Log
 
-## 4.2-SNAPSHOT (release planned for 2018-06-26)
+## 4.6 (2019-06-26)
+
+#### Galician
+  * added verbal agreement rules
+
+#### German
+  * added and improved rules
+  * The false friend rule has been modified to use ngrams: Now false friends
+    cause error messages if they are used in a wrong context, according to ngram statistics.
+    Note that some pairs from `false-friends.xml` are not supported anymore because
+    their precision isn't good enough. See `confusion_sets_l2_de.txt` for active DE/EN pairs.
+    Use `My handy is broken.` to test the rule. As before, this will only create
+    an error if `motherTongue` is set to a German language code.
+
+#### Portuguese
+  * POS and spelling improvements
+
+#### Spanish
+  * Updated spell dictionary from 2.1 to 2.4
+
+#### HTTP API / LT server
+  * `altLanguages` will only be considered for words with >= 3 characters
+  * Cleaned up error handling: invalid parameters will now return an HTTP error 400
+    instead of 500.
+
+
+## 4.5.1 (2019-03-28)
+
+#### LibreOffice / Apache OpenOffice Integration
+ 
+ * Fixed a bug that caused the rules in the options dialog to not appear in the text language 
+
+
+
+## 4.5 (2019-03-26)
+
+#### Catalan
+  * added and improved rules
+  * updated dictionary (catalan-pos-dict-2.3) with health terminology 
+
+#### English
+  * `resource/en/en-US-GB.txt` contains a mapping from US to British
+    English and vice versa. It's not used to detect correct or incorrect spellings,
+    but only to improve error messages so that they explicitly explain that
+    the incorrect word is actually a different variant (like 'colour' in an en-US
+    text).
+  * updated en_GB spellchecker dictionary from https://github.com/marcoagpinto/aoo-mozilla-en-dict (Version 2.70 - 2019-03-01)
+  * spell check ignores single characters (e.g., 'α')
+  
+#### Galician
+  * added and improved rules
+  * disambiguation improvements
+  * foreign names recognition
+
+#### German
+  * added and improved rules
+  * Simple German: added and improved rules
+  * improved suggestions for typos that end with a dot (typically at the end of
+    the sentence) - the dot is not included anymore
+  * spell check ignores single characters (e.g., 'α') and hyphenated compounds (e.g., 'α-Strahler')
+
+#### Portuguese
+  * added and significantly improved rules accuracy
+  * disambiguation improvements
+     - Chinese common names are now detected
+  * POS and spelling improvements
+  * updated Hunspell dictionaries to:
+    - [pt-PT pos-AO] Dicionários Portugueses Complementares 3.1
+
+#### Russian
+  * added and improved rules
+  * disambiguation improvements
+  * added many words without "yo" letter to POS dictionary
+  * added new words to spell dictionary
+
+#### Ukrainian
+  * dictionary update
+  * added and improved rules
+  * improvements to tokenization, tagging, and disambiguation
+
+#### General
+  * URLs written like `mydomain.org/` are now detected as domains and not
+    considered spelling errors anymore. Note that the slash is still needed
+    to avoid missing real errors.
+  * JSON output: The `replacements` list now has an optional new item `shortDescription`
+    for each `value`. It can contain a short definition/hint about the word. Currently,
+    the only words that have a short description are ones that have a description
+    in `confusion_sets.txt` (i.e. a text after the `|` symbol).
+
+#### General
+  * bug fix: don't make `interpretAs` part of getTextWithMarkup() (#1393)
+  * Experimental new attribute `raw_pos` for the `<pattern>` element in `grammar.xml`.
+    If set to `yes`,  the `postag` will refer to the part-of-speech tags *before*
+    disambiguation.
+  * Experimental support for `<antipattern>` in `disambiguation.xml`
+  
+#### HTTP API / LT server
+  * Experimental new parameter `preferredLanguages`: up to a certain limit (currently
+    50 characters), only these languages will be considered for language detection.
+    This has to be a comma-delimited list of language codes without variants (e.g.
+    use 'en', not 'en-US'). 
+    This only works with fasttext configured as the language detector.
+  * Spellcheck-only languages can now be added dynamically from the configuration
+    using `lang-xx=languagename` and `lang-xx-dictPath=/path/to/morfologik.dict`.
+    `xx` needs to be the language code. The JSON result will contain `spellCheckOnly: true`
+    for these languages.
+
+
+
+## 4.4.1 (2019-01-14)
+
+  * Fixed a bug that prevented opening the Options dialog in LibreOffice/OpenOffice
+
+
+
+## 4.4 (2018-12-27)
+
+#### Catalan
+  * added and improved rules
+  * updated dictionary
+
+#### Dutch
+  * added and improved rules, including more confusion rules for dyslectic people
+  * added large amount of family names to reduce false alarms in spelling
+
+#### English
+  * added and improved rules
+  * segmentation improvements
+  * updated en_GB spellchecker dictionary from https://github.com/marcoagpinto/aoo-mozilla-en-dict (Version 2.67 - 2018-12-01)
+  * added rules for 'Oxford spelling' (applicable to British English only)
+
+##### French
+  * small rule improvements
+
+#### German
+  * added and improved rules
+  * Swiss German: improved POS tagging of words that contain 'ß' in de-DE German (e.g.,
+    'gross' is tagged as 'gross[groß/ADJ:PRD:GRU]'); (#1147)
+  * Simple German: added and improved rules; restructured grammar.xml
+
+#### Portuguese
+  * added and improved rules
+  * disambiguation improvements
+  * POS and spelling improvements
+
+#### Russian
+  * added and improved rules
+  * disambiguation improvements
+  * POS and spelling dictionary improvements 
+
+#### Serbian
+  * Serbian never moved beyond its "initial support" state with a tiny number of rules,
+    and it has no active maintainer, so we have deactivated it for now. If you'd like to
+    maintain support for Serbian, let us know in the forum (https://forum.languagetool.org).
+    Once it's clear that a new active long-term maintainer has been found, we'll activate
+    support for Serbian again.
+    
+#### Ukrainian
+  * dictionary update (about 7k of new words)
+  * added and improved rules
+  * improvements to tokenization, tagging, and disambiguation
+
+#### HTTP API / LT server
+  * Experimental support for `altLanguages` parameter: takes a list of language
+    codes. Unknown words of the main languages (as specified by the `language` parameter)
+    will cause errors of type "Hint" if accepted by one of these languages.
+    We expect clients to interpret this like style issues, e.g. these words should
+    be underlined with a light blue instead of red.
+    Support for this is experimental, i.e. it might be removed again or implemented
+    in a different way. 
+  * Experimental support for `noopLanguages` parameter: takes a list of language
+    codes of languages that are not supported by LT but that will be detected and
+    mapped to a no-op language without rules. Useful for clients that rely on
+    language auto-detection and whose users might use languages not supported by LT.
+    NOTE 1: only works with fastText configured
+    NOTE 2: setting languages here will worsen language detection quality on average
+  * Change to language detection behavior: Removed fallback to English when confidence of
+    detection algorithm is low, instead now always returning highest scoring detected language.
+    Added a field `confidence` to `detectedLanguage` object in the JSON response that contains
+    the probability score for the detected language as computed by the detection algorithm.
+
+
+
+## 4.3 (2018-09-26)
 
 #### Catalan
   * added and improved rules
 
+#### Dutch
+  * added and improved rules
+
+#### English
+  * added and improved rules
+
+##### Esperanto
+  * added and improved rules
+
+##### French
+  * small rule improvements
+
+#### Galician
+  * added and improved rules
+
+#### German
+  * added and improved rules
+
+#### German (simple)
+  * added and improved rules
+
+#### Portuguese
+  * added and improved rules
+  * improvements to disambiguation, and segmentation
+  * updated Hunspell dictionaries to:
+    - [pt-PT pos-AO] Dicionários Portugueses Complementares 3.0
+
+#### Russian
+  * added and improved rules
+
+#### Ukrainian
+  * added and improved rules
+
+#### General
+  * Prepared support for AIX. See https://github.com/MartinKallinger/hunspell-aix
+    for the required libraries
+  * Email signatures are now ignored for language detection as long as they are
+    separated from the main text with `\n-- \n` 
+
+#### HTTP API / LT server
+  * The server can now accept JSON as the `data` parameter that describes
+    markup. For example:
+    ```
+    {"annotation":[
+      {"text": "A "},
+      {"markup": "<b>"},
+      {"text": "test"},
+      {"markup": "</b>"}
+    ]}
+    ```
+    With this input, LT will ignore the `markup` parts and run the check only
+    on the `text` parts. The error offset positions will still refer to the
+    original input including the markup, so that suggestions can easily be applied.
+    You can optionally use `interpretAs` to have markup interpreted as whitespace, like this:
+    ```
+    {"markup": "<p>", "interpretAs": "\n\n"}
+    ```  
+    Note that HTML entities (including `&nbsp;`) still need to be converted to Unicode characters
+    before feeding them into LT.  
+    (Issue: https://github.com/languagetool-org/languagetool/issues/757)
+  * The `blockedReferrers` setting now also considers the `Origin` header
+  * A `blockedReferrers` setting of `foobar.org` will now automatically match `http://foobar.org`, 
+   `http://www.foobar.org`, `https://foobar.org`, and `https://www.foobar.org`
+  * New setting `fasttextModel` (see https://fasttext.cc/docs/en/language-identification.html)
+    and `fasttextBinary` (see https://fasttext.cc/docs/en/support.html). With these
+    options set, the automatic language detection is much better than the built-in one.
+  * Experimental new `mode` parameter with `all`, `textLevelOnly`, or `allButTextLevelOnly` as value:
+    Will check only text-level rules or all other rules. As there are fewer text-level rules,
+    this is usually much faster and the access limit for characters per minute that can be
+    checked is more generous for this mode.
+  * Improved spellchecker suggestions (not yet enabled by default).
+    See https://forum.languagetool.org/t/gsoc-reports-spellchecker-server-side-framework-and-build-tool-tasks/2926/43
+  * Experimental new `type` in JSON. This is supposed to help clients choose the color
+    with which they underline/mark errors. Please do not rely on this yet, it might change
+    or even be removed.
+  
+
+## 4.2 (2018-06-26)
+
 #### Breton
-  * Made many messages shorter
+  * made many messages shorter
   * updated FSA spelling dictionary from An Drouizig Breton Spellchecker 0.15
+
+#### Catalan
+  * added and improved rules
+  * rules and updated dictionary for new diacritics rules (IEC 2017)
 
 #### Dutch
   * added and improved rules
@@ -17,6 +283,9 @@
   * updated en_GB spellchecker dictionary from https://github.com/marcoagpinto/aoo-mozilla-en-dict  (Version 2018-06-01)
   * updated en_US spellchecker dictionary from http://wordlist.aspell.net (Version 2018.04.16)
   * updated en_CA spellchecker dictionary from http://wordlist.aspell.net (Version 2018.04.16)
+
+#### Esperanto
+  * added and improved rules
 
 #### German
   * added and improved rules
@@ -36,18 +305,32 @@
   
 #### Russian
   * added and improved grammar and punctuation rules
-  * small spelling dictionary update
+  * upgraded the tagging and synthesizer dictionaries from AOT.ru rev.269 (extend tags, add missing tags)
+  * spelling dictionary update
+
+#### Spanish
+  * added and improved a few rules
 
 #### Ukrainian
+  * dictionary update (more than 15k of new words)
   * added and improved rules
+  * some improvements to tokenization, tagging and disambiguation
 
 #### HTTP API / LT server
+  * The JSON contains a new section `detectedLanguage` (under `language`) that
+    contains information about the automatically detected language. This way
+    clients can suggest switching to that language, e.g. in cases where the
+    user had selected the wrong language.
+  * New optional configuration setting `blockedReferrers`: a comma-separated list 
+    of HTTP referrers that are blocked and will not be served
   * BETA: New optional configuration settings `dbDriver`, `dbUrl`, `dbUsername`,
     `dbPassword` to allow user-specific dictionaries
     
 #### Java API
   * The parameters of the `*SpellerRule` classes (e.g. `MorfologikRussianSpellerRule`)
     have changed
+  * `LanguageIdentifier` will now only consider the first 1000 characters when
+    identifying the language of a text. This improves performance for long texts. 
 
 
 

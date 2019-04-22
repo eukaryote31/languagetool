@@ -18,6 +18,7 @@
  */
 package org.languagetool.rules.de;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.languagetool.AnalyzedSentence;
 import org.languagetool.AnalyzedToken;
@@ -90,6 +91,28 @@ public class SubjectVerbAgreementRule extends Rule {
       new PatternTokenBuilder().pos("PRP:CAU:GEN").setSkip(4).build(),
       new PatternTokenBuilder().csToken("und").setSkip(4).build(),
       new PatternTokenBuilder().tokenRegex("ist|war").build()
+    ),
+    Arrays.asList(
+      new PatternTokenBuilder().pos(JLanguageTool.SENTENCE_START_TAGNAME).build(),
+      new PatternTokenBuilder().posRegex("EIG:.*").build(),
+      new PatternTokenBuilder().csToken("und").setSkip(2).build(),
+      new PatternTokenBuilder().tokenRegex("sind|waren").build()
+    ),
+    Arrays.asList(
+      new PatternTokenBuilder().pos("KON:UNT").build(),
+      new PatternTokenBuilder().csToken("sie").setSkip(3).build(),
+      new PatternTokenBuilder().tokenRegex("sind|waren").build()
+    ),
+    Arrays.asList( //Bei komplexen und andauernden Störungen ist der Stress-Stoffwechsel des Hundes entgleist.
+      new PatternTokenBuilder().pos(JLanguageTool.SENTENCE_START_TAGNAME).build(),
+      new PatternTokenBuilder().posRegex("PRP:.+").setSkip(4).build(),
+      new PatternTokenBuilder().tokenRegex("ist|war").build(),
+      new PatternTokenBuilder().tokenRegex("d(as|er)|eine?").build()
+    ),
+    Arrays.asList(
+      new PatternTokenBuilder().token("zu").build(),
+      new PatternTokenBuilder().csToken("Fuß").build(),
+      new PatternTokenBuilder().tokenRegex("sind|waren").build()
     )
   );
 
@@ -116,6 +139,11 @@ public class SubjectVerbAgreementRule extends Rule {
   @Override
   public String getDescription() {
     return "Kongruenz von Subjekt und Prädikat (unvollständig)";
+  }
+
+  @Override
+  public int estimateContextForSureMatch() {
+    return ANTI_PATTERNS.stream().mapToInt(List::size).max().orElse(0);
   }
 
   @Override
@@ -191,7 +219,7 @@ public class SubjectVerbAgreementRule extends Rule {
                       && prevChunkIsNominative(tokens, i-1)
                       && !hasUnknownTokenToTheLeft(tokens, i)
                       && !hasUnknownTokenToTheRight(tokens, i+1)
-                      && !tokens[1].getToken().matches("Alle|Viele") // "Viele Brunnen in Italiens Hauptstadt sind bereits abgeschaltet."
+                      && !StringUtils.equalsAny(tokens[1].getToken(), "Alle", "Viele") // "Viele Brunnen in Italiens Hauptstadt sind bereits abgeschaltet."
                       && !isFollowedByNominativePlural(tokens, i+1);  // z.B. "Die Zielgruppe sind Männer." - beides Nominativ, aber 'Männer' ist das Subjekt
       if (match) {
         String message = "Bitte prüfen, ob hier <suggestion>" + getSingularFor(tokenStr) + "</suggestion> stehen sollte.";
@@ -251,7 +279,7 @@ public class SubjectVerbAgreementRule extends Rule {
 
   private boolean hasVerbToTheLeft(AnalyzedTokenReadings[] tokens, int startPos) {
     for (int i = startPos; i > 0; i--) {
-      if (tokens[i].matchesPosTagRegex("VER:[1-3]:.*")) {
+      if (tokens[i].matchesPosTagRegex("VER:[1-3]:.+")) {
         return true;
       }
     }
@@ -275,7 +303,7 @@ public class SubjectVerbAgreementRule extends Rule {
       String token = tokens[i].getToken();
       if (tokens[i].hasPartialPosTag("SUB:")) {
         AnalyzedTokenReadings lookup = tagger.lookup(token.toLowerCase());
-        if (lookup != null && lookup.hasPosTagStartingWith("VER:INF:")) {
+        if (lookup != null && lookup.hasPosTagStartingWith("VER:INF")) {
           infinitives++;
         } else {
           return false;
@@ -288,10 +316,9 @@ public class SubjectVerbAgreementRule extends Rule {
   boolean isFollowedByNominativePlural(AnalyzedTokenReadings[] tokens, int startPos) {
     for (int i = startPos; i < tokens.length; i++) {
       AnalyzedTokenReadings token = tokens[i];
-      if (token.hasPartialPosTag("SUB") || token.hasPartialPosTag("PRO")) {
-        if (token.hasPartialPosTag("NOM:PLU") || token.getChunkTags().contains(new ChunkTag("NPP"))) {  // NPP catches 'und' phrases
-          return true;
-        }
+      if (token.hasAnyPartialPosTag("SUB", "PRO")
+      		&& (token.hasPartialPosTag("NOM:PLU") || token.getChunkTags().contains(new ChunkTag("NPP")))) {  // NPP catches 'und' phrases
+        return true;
       }
     }
     return false;

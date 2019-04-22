@@ -52,6 +52,7 @@ public class CaseRuleTest {
   public void testRule() throws IOException {
 
     // correct sentences:
+    assertGood("Das ist eine Abkehr von Gottes Geboten.");
     assertGood("Dem Hund Futter geben");
     assertGood("Heute spricht Frau Stieg.");
     assertGood("Ein einfacher Satz zum Testen.");
@@ -128,8 +129,13 @@ public class CaseRuleTest {
     assertGood("Dabei werden im Wesentlichen zwei Prinzipien verwendet:");
     assertGood("Er fragte, ob das gelingen oder scheitern wird.");
     assertGood("Einen Tag nach Bekanntwerden des Skandals");
+    assertGood("Das machen eher die Erwachsenen.");
+    assertGood("Das ist ihr Zuhause.");
+    assertGood("Das ist Sandras Zuhause.");
+    assertGood("Das machen eher wohlhabende Leute.");
 
     //assertBad("Sie sind nicht Verständlich");
+    assertBad("Das machen der Töne ist schwierig.");
     assertBad("Sie Vertraute niemandem.");
     assertBad("Beten Lernt man in Nöten.");
     assertBad("Ich gehe gerne Joggen.");
@@ -150,6 +156,9 @@ public class CaseRuleTest {
     assertBad("Damit sollen sie die Versorgung in der Region Übernehmen.");
     assertBad("Die Unfallursache scheint geklärt, ein Lichtsignal wurde Überfahren.");
     assertBad("Der Lenker hatte die Höchstgeschwindigkeit um 76 km/h Überschritten.");
+    //assertBad("Das Extreme Sportfest");
+    //assertBad("Das Extreme Sportfest findet morgen statt.");
+    assertGood("Stets suchte er das Extreme.");
     assertGood("Ich möchte zwei Kilo Zwiebeln.");
     // "NIL" reading in Morphy that used to confuse CaseRule:
     assertGood("Ein Menschenfreund.");
@@ -168,6 +177,7 @@ public class CaseRuleTest {
     assertGood("Anders als physikalische Konstanten werden mathematische Konstanten unabhängig von jedem physikalischen Maß definiert.");
     assertGood("Eine besonders einfache Klasse bilden die polylogarithmischen Konstanten.");
     assertGood("Das südlich von Berlin gelegene Dörfchen.");
+    assertGood("Weil er das kommen sah, traf er Vorkehrungen.");
     
     assertGood("Sie werden im Allgemeinen gefasst.");
     assertGood("Sie werden im allgemeinen Fall gefasst.");

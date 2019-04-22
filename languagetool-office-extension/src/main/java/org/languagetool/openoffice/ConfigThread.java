@@ -27,6 +27,8 @@ import org.languagetool.gui.Configuration;
 import org.languagetool.gui.ConfigurationDialog;
 import org.languagetool.rules.Rule;
 
+import com.sun.star.uno.XComponentContext;
+
 /**
  * A thread that shows the configuration dialog which lets the
  * user enable/disable rules.
@@ -36,36 +38,49 @@ import org.languagetool.rules.Rule;
  */
 class ConfigThread extends Thread {
 
-  private final Language docLanguage;
+  private Language docLanguage;
   private final Configuration config;
   private final Main mainThread;
-  
+
   private final ConfigurationDialog cfgDialog;
   
   ConfigThread(Language docLanguage, Configuration config, Main main) {
-    this.docLanguage = docLanguage;
+    this.docLanguage = config.getDefaultLanguage();
+    if(this.docLanguage == null) {
+      this.docLanguage = docLanguage;
+    }
     this.config = config;
-    mainThread = main; 
+    this.mainThread = main; 
     cfgDialog = new ConfigurationDialog(null, true, config);
   }
 
   @Override
   public void run() {
     try {
-      JLanguageTool langTool = new JLanguageTool(docLanguage, config.getMotherTongue()
-          , null, new UserConfig(config.getConfigValues()));
+      XComponentContext xContext = mainThread.getContext();
+      LinguisticServices linguServices = null;
+      if(xContext != null) {
+        linguServices = new LinguisticServices(xContext);
+      }
+      JLanguageTool langTool = new JLanguageTool(docLanguage, config.getMotherTongue(), null, 
+          new UserConfig(config.getConfigurableValues(), linguServices));
       List<Rule> allRules = langTool.getAllRules();
       for (Rule rule : allRules) {
-        if(rule.isOfficeDefaultOn()) rule.setDefaultOn();
-        else if(rule.isOfficeDefaultOff()) rule.setDefaultOff();
+        if (rule.isOfficeDefaultOn()) {
+          rule.setDefaultOn();
+        } else if(rule.isOfficeDefaultOff()) {
+          rule.setDefaultOff();
+        }
       }
-      cfgDialog.show(allRules);
-      config.saveConfiguration(docLanguage);
-      if (mainThread != null) {
-        mainThread.resetDocument();
+      boolean configChanged = cfgDialog.show(allRules);
+      if(configChanged) {
+        config.saveConfiguration(docLanguage);
+        if (mainThread != null) {
+          mainThread.resetDocument();
+        }
       }
     } catch (Throwable e) {
-      Main.showError(e);
+      MessageHandler.showError(e);
     }
   }
   

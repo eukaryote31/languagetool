@@ -46,7 +46,7 @@ import org.languagetool.tagging.ca.CatalanTagger;
  */
 public class SimpleReplaceVerbsRule extends AbstractSimpleReplaceRule {
   
-  private static final Map<String, List<String>> wrongWords = load("/ca/replace_verbs.txt");
+  private static final Map<String, List<String>> wrongWords = loadFromPath("/ca/replace_verbs.txt");
   private static final Locale CA_LOCALE = new Locale("CA");
 
   @Override
@@ -63,7 +63,7 @@ public class SimpleReplaceVerbsRule extends AbstractSimpleReplaceRule {
   private CatalanTagger tagger;
   private CatalanSynthesizer synth;
   
-  public SimpleReplaceVerbsRule(final ResourceBundle messages, Language language) throws IOException {
+  public SimpleReplaceVerbsRule(final ResourceBundle messages, Language language) {
     super(messages);
     super.setCategory(Categories.TYPOS.getCategory(messages));
     super.setLocQualityIssueType(ITSIssueType.Misspelling);
@@ -141,12 +141,7 @@ public class SimpleReplaceVerbsRule extends AbstractSimpleReplaceRule {
           infinitive = lexeme.concat("ar");
           if (wrongWords.containsKey(infinitive)) {
             List<String> wordAsArray = Arrays.asList("cant".concat(desinence));
-            List<AnalyzedTokenReadings> analyzedTokenReadingsList = null;
-            try {
-              analyzedTokenReadingsList = tagger.tag(wordAsArray);
-            } catch (IOException e) {
-              throw new RuntimeException("Could not tag sentence: " + wordAsArray, e);
-            }
+            List<AnalyzedTokenReadings> analyzedTokenReadingsList = tagger.tag(wordAsArray);
             if (analyzedTokenReadingsList != null) {
               analyzedTokenReadings = analyzedTokenReadingsList.get(0);
             }

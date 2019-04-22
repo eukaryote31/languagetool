@@ -63,6 +63,11 @@ public class WordRepeatRule extends Rule {
   }
 
   @Override
+  public int estimateContextForSureMatch() {
+    return 1;
+  }
+
+  @Override
   public RuleMatch[] match(AnalyzedSentence sentence) {
     List<RuleMatch> ruleMatches = new ArrayList<>();
     AnalyzedTokenReadings[] tokens = getSentenceWithImmunization(sentence).getTokensWithoutWhitespace();
@@ -95,7 +100,7 @@ public class WordRepeatRule extends Rule {
   // avoid "..." etc. to be matched:
   private boolean isWord(String token) {
     boolean isWord = true;
-    if (token.isEmpty() || StringUtils.isNumeric(token)) {
+    if (StringUtils.isNumericSpace(token)) {
       isWord = false;
     } else if (token.length() == 1) {
       char c = token.charAt(0);

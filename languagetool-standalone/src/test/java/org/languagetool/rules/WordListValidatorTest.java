@@ -38,12 +38,13 @@ public class WordListValidatorTest {
 
   private static final Pattern VALID_CHARS = Pattern.compile(
           "[0-9a-zA-ZöäüÖÄÜßëçèéáàóòÈÉÁÀÓÒãñíîş&" +
-          "âêôõû" +  // for Portuguese
-          "Œ€ūαΑβΒγɣΓδΔεΕζΖηΗθΘιΙκΚλΛμΜνΝξΞοΟπΠρΡσΣτΤυΥφΦχΧψΨωΩάΆέΈίΊήΉύΎϊϋΰΐœţ" +
-          "Śśōżúï" +
+          "Œ€ūαΑβΒγɣΓδΔεΕζΖηΗθΘιΙκΚλΛμΜνΝξΞοΟπΠρΡσΣτΤυΥφΦχΧψΨωΩάΆέΈίΊήΉύΎϊϋΰΐœţłń" +
+          "ŚśōżúïÎôêâû" +
+          "õ" +   // for Portuguese
           "·" +   // for Catalan
+          "'ÅıøğåšĝÇİŞŠčžć±+-" +   // for Dutch (inhabitants) proper names mostly
           "./-]+" + 
-          "|[khmcdµ]?m[²³]|°[CFR]"
+          "|[khmcdµ]?m[²³]|°[CFR]|CO₂-?.*|mc²"
   );
 
   // Words that are valid but with special characters so that we don't want to
@@ -51,6 +52,8 @@ public class WordListValidatorTest {
   private static final Set<String> VALID_WORDS = new HashSet<>(Arrays.asList(
           "Mondelēz",
           "Brač",
+          "Djuveč",
+          "Djuvečreis",
           "Hidschāb/S",
           "Dvořák/S",
           "Erdoğan/S",
@@ -67,7 +70,10 @@ public class WordListValidatorTest {
           "P&O",
           "S&P",
           "ČSSR",
-          "V&D"
+          "V&D",
+          // Greek letters / Mathematics and physics variables
+          "Α", "Β", "Γ", "Δ", "Ε", "Ζ", "Η", "Θ", "Ι", "Κ", "Λ", "Μ", "Ν", "Ξ", "Ο", "Π", "Ρ", "Σ", "Τ", "Υ", "Φ", "Χ", "Ψ", "Ω", 
+          "α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ", "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ", "υ", "φ", "χ", "ψ", "ω"          
   ));
 
   @Test

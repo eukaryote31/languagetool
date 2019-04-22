@@ -1,21 +1,24 @@
 # CaseRule exceptions - phrases (regular expressions) to be spelled uppercase
 [A-Z].+angestellte[nr]?
 Afrikanischen? Union
+Akademische[nr]? Austauschdienst
 Aktuellen? Stunde
 Allgemeinen? (Geschäftsbedingungen|Zeitung)
 Allgemeine[nr]? Deutsche[nr]? Automobilclub
 Alt und Jung
 Amnesty International
 Apokalyptische[nr]? Reiters?
-Astronomischen? Einheit(en)?
+Astronomischen? Einheit(en)?|Union
 Arabischen? Halbinsel|Liga|Emiraten?
 Arabische[nr]? Frühlings?
 Arte
 (Arktische|Atlantische|Pazifische|Stille)[rmn]? Ozeans?
 Aufschnitte
+Auf und Ab
 August Horch
 Auswärtige[mns]? Amte?s?
 Bad Kleinen
+Bares ist Wahres
 Brandenburgischen[ns]? Landesamt(es|s)?|Staats.*
 Bayerische[nrs]? Staats.+|Verdienst(medaillen?|ordens?)|Rundfunks?|Ministerpräsident(en)?|Ver(waltungsgericht|fassung).*|Hof|Walds?|Land(tag|esamte?)s?
 (Bekennend|Evangelisch|Katholisch)en? Kirche
@@ -23,6 +26,7 @@ Blaue[nr]? Reiters?|Band(s|es)?|Planet(en)?|Brief[es]?|Moschee|Enzians?
 Bögen
 Botanische[rn]? Gartens?
 Braune[rn]? Zwerge?s?
+Brandenburgischen? Konzert[es]n?
 Britischen? Inseln
 Bundeskanzlers? Kurz
 Bundesminister(s?|iums?|in) für Arbeit und Soziales
@@ -33,13 +37,15 @@ das Hier und Heute
 [dD]as [Pp]ro und [Kk]ontra
 Demokratischen? Republik|Partei|Volksrepublik
 ([Dd]e[rns]|[Ii]m) Englische[rn]? Gartens?
+Den Haag
 Hohen? Pforte|Schule
 des Himmlischen Friedens
 Deutschen? Museums?
+Deutschen? [A-Z][a-zäöü]+ Gesellschaft(en)?
 (Deutsche[nr]?|Belgische[nr]?) Schäferhund(en?)?
 Digital (Video|Natives?)
 (Dreißig|Hundert|Sieben)jährigen? Kriege?s?
-Dritte[ns]? Welt|Reiche?s?
+Dritte[ns]? Welt|Reiche?s?|Oktober|Bürgermeisters?
 Drum und Dran
 Duisburger
 Dunklen? Materie|Energie
@@ -48,12 +54,14 @@ ein absolutes Muss
 [eE]ine (gute|glatte|schlechte) Eins|Zwei|Drei|Vier|Fünf|Sechs
 [eE]ine Eins|Zwei|Drei|Vier|Fünf|Sechs
 Eiserne[ns]? Kreuz
-Eisernen? Kreuzes?|Vorhangs?
+Eiserne[nr]? Kreuzes?|Vorhangs?
 Erste[rn]? Mai|Liga
 Erste[rnm]? (Weltkriege?s?|Bürgermeisters?)
 Essener
 Europäische[mnr]? Fonds|(Atomg|G)emeinschaft|Parlamente?s?|Union|Gerichtshof(es|s)?|Patentamt(es|s)?|Wirtschaftsgemeinschaft|Kommission|Rat(es|s)?|Zentralbank|Menschenrechtskonvention|Agentur|Arzneimittel-?[aA]gentur|Volkspartei|Haftbefehls?|Kulturhauptstadt|Währungsunion
 Ewige[rn]? Stadt
+Fair Trade
+Falsche[rn]? Hasen?
 Fast Food
 Ferne[rn]? Ostens?
 Fleißige[ns]? Lieschens?
@@ -63,14 +71,14 @@ Freiwillige[sn]? Soziale[sn]? Jahrs?
 Fränkische[nr]? Schweiz
 Geheimen? Staatspolizei
 Gelben? Karten?|Trikots?|Rüben?|Meer(e?s)?
-Gelbe[nr]? Fluss(es)?|Engel[ns]?|Seiten?|Sacks?
+Gelbe[nr]? Fluss(es)?|Engel[ns]?|Seiten?|Sacks?|Tonnen?
 Gelobten? Lands?
 Gewerbetreibende[rn]?
 Gleich und Gleich
 Gleicher unter Gleichen
 Gleiches mit Gleichem
 Golden (Globes?|Delicious)
-Goldene[nr]? Schnitt|Bulle|Palme
+Goldene[nr]? Schnitt|Bulle|Palme|Bär(en)?|Löwen?|Himbeeren?
 Goldenen Schnitte?s|Zwanzigern?
 Goldene Zwanziger
 Goldene[sn]? Zeitalters?|(Ehren|Verdienst)zeichens?
@@ -94,8 +102,9 @@ Heiligen? Drei Königen?
 Heiligen Römischen Reich|Reiche?s
 Heilige Römische Reich
 Heiliges Römisches Reich
-Hohe[nr]? Rat|Kommissar|Vertreter|Tatra
-Hohen Rate?s|Kommissars|Vertreters
+Hessischen? Kultusministeriums?|Rundfunks?|Berglands?
+Hin und Her
+Hohe[nr]? Rat(e?s)?|Kommissars?|Vertreters?|Tatra|See
 Hotel Vier Jahreszeiten
 [iI]m Großen und Ganzen
 [iI]m Guten wie im Schlechten
@@ -108,25 +117,26 @@ Inoffizielle[rn]? Mitarbeiter[sn]?
 International Airlines
 Internationalen? Filmfestspielen?|Atomenergie(-Organisation|behörde|organisation)|Fernmeldeunion|Komitees?|.*tag|Raumstation|Energieagentur
 Internationale[mnr]? Währungsfonds|(Seeg|Strafg|Sportg|Militärg|G)erichtshof(e?s)?|Fonds|Klassifikation
-Internationale[ns]? Olympische[ns]?|Komitees?|Filmfestivals?|Einheitensystems?
+Internationale[ns]? Astronomischen?|Olympische[ns]?|Komitees?|Filmfestivals?|Einheitensystems?
 Islamische[rn]? Staat
 Islamischen Staate?s
+Italienische[nr]? Republik|Salat
 Japanische[ns]? Alpen|Meer
 Jung und Alt
 Jüngste[ns]? Tags?|Gerichts?
 Kaps? der Guten Hoffnung
-Kalten Kriege?s
-Kalte[mnr]? Krieg
+Kalte[mnr]? Krieg(e?s)?
 Kanzler Kurz
 Katholischen? Liga|Universität
+Kaukasische[nr]? Kreidekreis
 kaum Neues
-Kleinen? Antillen|Anfragen?|Zeitung
+Kleinen? Antillen|Anfragen?|Zeitung|Belts?
 Kleiner? Bär
 (Kommunist|Sozialdemokrat)ischen? Partei
-Königlichen? Hoheit
+Königlichen? (Akademie|Hoheit)
 Las Palmas
-Letzte[nr]? Wille
-Letzten Willens
+Letzte[nr]? Wille(n|ns)?
+Lug und Trug
 Macht Stehende
 Manschetten?
 Medizinischen? Hochschule|Fakultät
@@ -138,6 +148,7 @@ Mittwochfrüh
 (Mon|D(ien|onner)s|Frei|S(ams|onn))tagfrüh
 Muttersprachler[ns]?
 Nahe[nr]? Ostens?
+National Institute of
 Nationale[nr]? Sicherheitsrat(e?s)?|Volksarmee
 Neuen? Medien
 Niels Bohr
@@ -146,6 +157,7 @@ Nördlichen? Kalkalpen
 Obersten Gerichtshofe?s
 Oberste[nrs]? Gericht(shof)?s?|Heeresleitung|Bundesgerichts?
 of Modern
+Öffentliche[nmr]? Dienst(es)?
 Olympische[ns]? Komitees?|Dorf(e?s)?|Sommerspielen|Flagge|Winterspielen?|Spielen
 Olympische[nr]? Spiele|Sportbunds?
 Osmanischen? Reich(es|s)?
@@ -153,7 +165,7 @@ Osmanischen? Reich(es|s)?
 Palästinensischen? Autonomie.+
 Parlamentarische[rn]? Rats?|Rates|Kontrollgremiums?|Untersuchungsausschuss(es)?
 Persische[nr]? Golfs?
-Physikalische[nr]? Gesellschaft(en)?
+Physikalischen? Gesellschaft
 Real Bamako|Madrid
 Regierenden Bürgermeisters
 Regierende[mnr]? Bürgermeister(in)?
@@ -163,15 +175,12 @@ Römischen Reiche?s|Verträgen?
 Römischen Reiches Deutscher Nation
 Römische[ns]? Reich
 Römische Reich Deutscher Nation
-Roten? Beete|Karten?|Khmer|Liste|Armee|Platz|Rüben?
-Rote[nms]? Kreuz|Rathaus
-Roten Meeres|Planeten|Kreuzes
-Rote[nr]? Johannisbeeren?|Barons?|Riesen?|Milan|Planet(en)?|Halbmonds?
-Rote[ns]? Meer
+Rote[nmrs]? Kreuz(es)?|Johannisbeeren?|Barons?|Riesen?|Milans?|Planet(en)?|Halbmonds?|Meer(es)?|Grütze|Rathaus(es)?|Beete|Karten?|Khmer|Liste|Armee|Platz|Rüben?
 Runder Tisch
 Russischen? Föderation|Revolution
 (Großdeutsch|Russisch|Tausendjährig)e[ns]? Reiche?s?
 Sächsische[nr]? Schweiz|Staats.+
+Sang und Klang
 Sanitär
 Schwäbisch Halls?
 Schwarzer? Bretter|Löcher|Körper|Kontinent|Witwe|Johannisbeeren?|Holunder|Peter
@@ -185,11 +194,13 @@ Smart Cit(y|ies)|Card|Home|Phone|Watch
 SK Rapid
 Sozialistischen? Sowjetrepublik(en)?|(Einheits)?[pP]artei
 Spanischen? Grippe|Erbfolgekriegs?|Bürgerkriegs?|Niederlanden?|Treppe|Fliege|Reitschule
+Speis und Trank
 Ständige[nr] Impfkommission
 Staatlichen? Universität|Muse(ums?|en)
 Staatsange(hörig|stellt)e[rn]?
 Statistische[mns]? Bundesamt(s|es)?
 Statistische[rn]?|Theoretische[rn]? Physik
+Stiftung Preußischer?
 Steinerne[sn]? Meers?|Brücke
 Stiege
 Süddeutschen? Zeitung
@@ -200,14 +211,17 @@ Technische[ns]? Hilfswerks?
 Technischen? (Fachh|H)ochschulen?|Universität(en)?
 Technische[nr]? Direktors?
 Tel Aviv
-T(schech|ürk)ischen?|Italienischen? Republik
+T(schech|ürk)ischen? Republik
 Trank
+Treu und Glauben
 Unbefleckten? Empfängnis
 Unserer Lieben Frau
 Unter den Linden
 Urban I+
-Vereinigten? Arabischen? Emirate
-Vereinten Nationen
+Verlobten?
+Vereinigte[mns] Staaten|Königreiche?s?|Bühnen|Arabischen?
+Vereinte[ns] Nationen
+Virtual Private Network
 [vV]orgestern|[Gg]estern|[Hh]eute|[Mm]orgen|[Üü]bermorgen Früh
 Weh und Ach
 Weiße[nr]? Zwerge?|Sonntags?|Tod
@@ -215,6 +229,8 @@ Wenn und Aber
 Westfälischen? Frieden?|Friedens|Pforte
 Wilde[nr]? Westens?
 Wissenschaftlichen? Dienst(e?s)?
+Wohltemperierten? Klaviers?
+Woody|Tim Allen
 Zehn Geboten?
 Zweite Deutsche Fernsehen
 Zweite[mnr]? Weltkrieg(e?s)?

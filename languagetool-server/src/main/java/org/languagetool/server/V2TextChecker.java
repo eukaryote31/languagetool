@@ -20,14 +20,15 @@ package org.languagetool.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import org.jetbrains.annotations.NotNull;
+import org.languagetool.DetectedLanguage;
 import org.languagetool.Language;
 import org.languagetool.Languages;
+import org.languagetool.markup.AnnotatedText;
 import org.languagetool.rules.RuleMatch;
 import org.languagetool.tools.StringTools;
 import org.languagetool.tools.RuleMatchesAsJsonSerializer;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.languagetool.server.ServerTools.setCommonHeaders;
 
@@ -49,7 +50,7 @@ class V2TextChecker extends TextChecker {
   }
 
   @Override
-  protected String getResponse(String text, Language lang, Language motherTongue, List<RuleMatch> matches,
+  protected String getResponse(AnnotatedText text, DetectedLanguage lang, Language motherTongue, List<RuleMatch> matches,
                                List<RuleMatch> hiddenMatches, String incompleteResultsReason) {
     RuleMatchesAsJsonSerializer serializer = new RuleMatchesAsJsonSerializer();
     return serializer.ruleMatchesToJson(matches, hiddenMatches, text, CONTEXT_SIZE, lang, incompleteResultsReason);
@@ -99,15 +100,17 @@ class V2TextChecker extends TextChecker {
   
   @Override
   @NotNull
-  protected Language getLanguage(String text, Map<String, String> parameters, List<String> preferredVariants) {
-    Language lang;
+  protected DetectedLanguage getLanguage(String text, Map<String, String> parameters, List<String> preferredVariants,
+                                         List<String> noopLangs, List<String> preferredLangs) {
     String langParam = parameters.get("language");
+    DetectedLanguage detectedLang = detectLanguageOfString(text, null, preferredVariants, noopLangs, preferredLangs);
+    Language givenLang;
     if (getLanguageAutoDetect(parameters)) {
-      lang = detectLanguageOfString(text, null, preferredVariants);
+      givenLang = detectedLang.getDetectedLanguage();
     } else {
-      lang = Languages.getLanguageForShortCode(langParam);
+      givenLang = Languages.getLanguageForShortCode(langParam);
     }
-    return lang;
+    return new DetectedLanguage(givenLang, detectedLang.getDetectedLanguage(), detectedLang.getDetectionConfidence());
   }
 
   @Override
