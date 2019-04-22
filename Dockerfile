@@ -15,6 +15,6 @@ EXPOSE 8081
 RUN mkdir /app
 WORKDIR /app
 
-COPY --from=0 /languagetool/languagetool-standalone/target/LanguageTool-4.2-SNAPSHOT/LanguageTool-4.2-SNAPSHOT/ /app
+COPY --from=0 /languagetool/languagetool-standalone/target/LanguageTool-4.6-SNAPSHOT/LanguageTool-4.6-SNAPSHOT/ /app
 
 CMD java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081 --public
